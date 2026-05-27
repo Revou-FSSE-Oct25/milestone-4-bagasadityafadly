@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── User ────────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts Account[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// ─── Account ─────────────────────────────────────────────────────────────────
+
+model Account {
+  id            String      @id @default(uuid())
+  accountNumber String      @unique
+  accountType   AccountType @default(SAVINGS)
+  balance       Decimal     @default(0) @db.Decimal(18, 2)
+  currency      String      @default("IDR")
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  sentTransactions     Transaction[] @relation("SenderAccount")
+  receivedTransactions Transaction[] @relation("ReceiverAccount")
+
+  @@index([userId])
+  @@index([accountNumber])
+  @@map("accounts")
+}
+
+// ─── Transaction ─────────────────────────────────────────────────────────────
+
+model Transaction {
+  id           String            @id @default(uuid())
+  type         TransactionType
+  amount       Decimal           @db.Decimal(18, 2)
+  balanceAfter Decimal           @db.Decimal(18, 2)
+  description  String?
+  status       TransactionStatus @default(COMPLETED)
+  createdAt    DateTime          @default(now())
+
+  fromAccountId String?
+  fromAccount   Account? @relation("SenderAccount", fields: [fromAccountId], references: [id])
+
+  toAccountId String?
+  toAccount   Account? @relation("ReceiverAccount", fields: [toAccountId], references: [id])
+
+  @@index([fromAccountId])
+  @@index([toAccountId])
+  @@index([createdAt])
+  @@map("transactions")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum AccountType {
+  SAVINGS
+  CHECKING
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
