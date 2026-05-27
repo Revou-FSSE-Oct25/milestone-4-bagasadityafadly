@@ -17,6 +17,14 @@ A secure RESTful banking API built with NestJS, Prisma, and PostgreSQL. Supports
 | Testing | Jest |
 | Deployment | Render |
 
+## Deployment
+
+### Backend API
+https://milestone-4-bagasadityafadly.onrender.com
+
+### Swagger Documentation
+https://milestone-4-bagasadityafadly.onrender.com/api/docs
+
 ## Project Structure
 
 ```
